@@ -1,26 +1,76 @@
-import { NextRequest } from "next/server";
-import { twilio } from "twilio";
+import { setSession, getSession, clearSession } from "@/lib/sessionStore.js";
 
-/**
- * 2️⃣ HANDLE USER INPUT (second route)
- */
 export async function POST(req) {
   try {
-    const data = await req.formData();
-    const digit = data.get("Digits");
+    const url = new URL(req.url);
+    const stage = url.searchParams.get("stage") || "intro";
+    const body = await req.text();
+    const params = new URLSearchParams(body);
+    const digit = params.get("Digits");
+    const callSid = params.get("CallSid");
 
-    let responseText = "Sorry, I did not understand that.";
-    if (digit === "1") responseText = "You selected Option A.";
-    else if (digit === "2") responseText = "You selected Option B.";
-    else if (digit === "3") responseText = "You selected Option C.";
+    let twiml = "";
+    const base = process.env.PUBLIC_URL;
 
-    const twiml = `
-      <Response>
-        <Say voice="alice">${responseText}</Say>
-        <Say voice="alice">Returning to the main menu.</Say>
-        <Redirect>${process.env.PUBLIC_URL}/api/twilio</Redirect>
-      </Response>
-    `;
+    if (digit === "0") {
+      // End call immediately
+      const thanks = `${base}/api/supabase?file=thanks.mp3`;
+      twiml = `
+        <Response>
+          <Play>${thanks}</Play>
+          <Hangup/>
+        </Response>
+      `;
+      clearSession(callSid);
+    }
+
+    else if (stage === "intro") {
+      if (digit === "1") {
+        // Available → go to insurance step
+        setSession(callSid, { stage: "insurance" });
+        const insurance = `${base}/api/supabase?file=Aetna.mp3`;
+
+        twiml = `
+          <Response>
+            <Gather input="dtmf" timeout="5" numDigits="1"
+              action="${base}/api/twilio/handleinput?stage=insurance"
+              method="POST">
+              <Play>${insurance}</Play>
+            </Gather>
+            <Say>No input received. Goodbye.</Say>
+            <Hangup/>
+          </Response>
+        `;
+      } else {
+        // Invalid input
+        twiml = `
+          <Response>
+            <Say>Invalid input. Returning to main menu.</Say>
+            <Redirect>${base}/api/twilio/menu</Redirect>
+          </Response>
+        `;
+      }
+    }
+
+    else if (stage === "insurance") {
+      const thanks = `${base}/api/supabase?file=thanks.mp3`;
+      if (digit === "1") {
+        twiml = `
+          <Response>
+            <Play>${thanks}</Play>
+            <Hangup/>
+          </Response>
+        `;
+      } else {
+        twiml = `
+          <Response>
+            <Play>${thanks}</Play>
+            <Hangup/>
+          </Response>
+        `;
+      }
+      clearSession(callSid);
+    }
 
     return new Response(twiml, {
       status: 200,
@@ -29,7 +79,7 @@ export async function POST(req) {
   } catch (err) {
     console.error("Twilio Input Error:", err);
     return new Response(
-      `<Response><Say>There was an error processing your input.</Say></Response>`,
+      `<Response><Say>Error processing input.</Say></Response>`,
       { status: 500, headers: { "Content-Type": "text/xml" } }
     );
   }
