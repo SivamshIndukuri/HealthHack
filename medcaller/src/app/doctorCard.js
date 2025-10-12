@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-export default function DoctorCard({ name, rating, location, hours, phone }) {
+export default function DoctorCard({ name, rating, location, hours, phone, status }) {
   const formattedHours = Array.isArray(hours) ? hours.join(", ") : hours || "N/A";
 
   return (
@@ -33,6 +33,10 @@ export default function DoctorCard({ name, rating, location, hours, phone }) {
         ) : (
           <span style={styles.value}>N/A</span>
         )}
+      </div>
+          <div style={styles.row}>
+        <span style={styles.label}>Status</span>
+        <span style={styles.value}>{status}</span>
       </div>
     </div>
   );

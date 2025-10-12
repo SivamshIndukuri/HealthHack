@@ -51,6 +51,7 @@ export async function GET(request) {
           address: d.geometry?.location ?? place.geometry?.location ?? null,
           rating,
           phone: d.formatted_phone_number ?? "N/A",
+          status: "Unknown",
           hours: Array.isArray(d.opening_hours?.weekday_text) ? d.opening_hours.weekday_text : [],
           website: d.website ?? null,
           place_id: place.place_id,
