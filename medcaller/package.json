@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@supabase/supabase-js": "^2.75.0",
     "next": "15.5.4",
     "puppeteer": "^24.24.0",
     "react": "19.1.0",

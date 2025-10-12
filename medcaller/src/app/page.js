@@ -7,24 +7,53 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [location, setLocation] = useState("Full Name");
-  const [data, setData] = useState("");
+  const [location, setLocation] = useState("");
+  const [name, setName] = useState("");
 
 
 
 
  
   useEffect(() => {
-      fetch("/api/psychiatrists?location=40.5742,-74.6387&radius=10000&query=psychiatrist")
-        .then((res) => res.json())
-        .then((data) => {
-          console.log(data);        // logs the JSON object
-          setDoctors(data.results);
-          setLoading(false); 
-        })
-      
+    const q = name.trim();
+    if (!q) return;
 
-  }, []);
+    (async () => {
+      try {
+        const res = await fetch(`/api/patients?name=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        if (res.ok && json?.location?.lat != null && json?.location?.lng != null) {
+          setLocation(json.location);                // <- set coords here
+        } else {
+          console.error("patients error:", json);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [name]);
+
+  // 2) Fetch psychiatrists only after coords exist
+  useEffect(() => {
+    if (!location) return;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const { lat, lng } = location;
+        const res = await fetch(
+          `/api/psychiatrists?location=${lat},${lng}&radius=10000&query=psychiatrist`
+        ); // note: lat first, then lng
+        const json = await res.json();
+        setDoctors(Array.isArray(json.results) ? json.results : []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [location]);
+
 
 
 
@@ -47,8 +76,8 @@ export default function Home() {
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
-            setData(e.target.value);   // update state only on Enter
-            console.log("Enter pressed:", e.target.value); // optional action
+            setName(e.target.value);   
+            console.log("Enter pressed:", e.target.value); 
           }
         }}
         style={{
