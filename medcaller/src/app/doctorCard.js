@@ -1,12 +1,20 @@
 "use client";
 import React from "react";
 
-export default function DoctorCard({ name, rating, location, hours, number }) {
+export default function DoctorCard({ name, rating, location, hours, phone }) {
+  // Format location safely
+  
+
+  // Format hours safely
+  const formattedHours = Array.isArray(hours)
+    ? hours.join(", ")
+    : hours || "N/A";
+
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <h3 style={styles.name}>{name}</h3>
-        <span style={styles.badge}>⭐ {rating}</span>
+        <h3 style={styles.name}>{name || "Unknown Doctor"}</h3>
+        <span style={styles.badge}>⭐ {rating || "N/A"}</span>
       </div>
 
       <div style={styles.row}>
@@ -16,12 +24,16 @@ export default function DoctorCard({ name, rating, location, hours, number }) {
 
       <div style={styles.row}>
         <span style={styles.label}>Hours</span>
-        <span style={styles.value}>{hours}</span>
+        <span style={styles.value}>{formattedHours}</span>
       </div>
 
       <div style={styles.row}>
         <span style={styles.label}>Phone</span>
-        <a href={`tel:${number}`} style={styles.link}>{number}</a>
+        {phone && phone !== "N/A" ? (
+          <a href={`tel:${phone}`} style={styles.link}>{phone}</a>
+        ) : (
+          <span style={styles.value}>N/A</span>
+        )}
       </div>
     </div>
   );

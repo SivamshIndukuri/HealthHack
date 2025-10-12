@@ -1,21 +1,32 @@
 "use client";
 import DoctorCard from "./doctorCard";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
 
 export default function Home() {
-  const doctors = [
-    { name: "Dr. Jane Smith", location: "123 Main St, Bridgeport, CT", number: "(203) 555-1212", rating: "4.5", hours: "9AM – 5PM" },
-    { name: "Dr. John Doe", location: "456 Elm St, Stamford, CT", number: "(203) 555-2323", rating: "4.7", hours: "10AM – 6PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
-    { name: "Dr. Emily Nguyen", location: "789 Maple Ave, Norwalk, CT", number: "(203) 555-3434", rating: "4.9", hours: "8AM – 4PM" },
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [location, setLocation] = useState("")
 
-  ];
+
+
+ 
+  useEffect(() => {
+      fetch("/api/psychiatrists?location=40.5742,-74.6387&radius=10000&query=psychiatrist")
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data);        // logs the JSON object
+          setDoctors(data.results);
+          setLoading(false); 
+        })
+      
+
+  }, []);
+
+
+  
+
 
 
   return (
