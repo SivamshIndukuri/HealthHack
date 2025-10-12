@@ -8,13 +8,28 @@
     "start": "next start"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@supabase/supabase-js": "^2.75.0",
     "next": "^15.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
+=======
+    "@expo/vector-icons": "^15.0.2",
+    "@supabase/supabase-js": "^2.75.0",
+    "next": "15.5.4",
+    "puppeteer": "^24.24.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-icons": "^5.5.0"
+>>>>>>> ada9fb1c218e02deb99ac7360c661cc8315c093b
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4"
-  }
+  },
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
