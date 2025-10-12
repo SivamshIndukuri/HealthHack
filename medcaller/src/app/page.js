@@ -7,7 +7,9 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [location, setLocation] = useState("")
+  const [location, setLocation] = useState("Full Name");
+  const [data, setData] = useState("");
+
 
 
 
@@ -25,9 +27,6 @@ export default function Home() {
   }, []);
 
 
-  
-
-
 
   return (
     <div style={styles.page}>
@@ -40,6 +39,29 @@ export default function Home() {
           height={90}
           priority
         />
+
+      <input
+        type="text"
+        id="text"
+        placeholder="Full Name"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            setData(e.target.value);   // update state only on Enter
+            console.log("Enter pressed:", e.target.value); // optional action
+          }
+        }}
+        style={{
+          marginLeft: "25px",
+          padding: "5px",
+          border: "2px solid #333",
+          borderRadius: "100px",
+          marginRight: "100px",
+          width: "350px",
+        }}
+      />
+        
+        
       </header>
 
       {/* Doctor cards */}

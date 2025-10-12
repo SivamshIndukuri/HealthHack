@@ -2,24 +2,23 @@
 import React from "react";
 
 export default function DoctorCard({ name, rating, location, hours, phone }) {
-  // Format location safely
-  
-
-  // Format hours safely
-  const formattedHours = Array.isArray(hours)
-    ? hours.join(", ")
-    : hours || "N/A";
+  const formattedHours = Array.isArray(hours) ? hours.join(", ") : hours || "N/A";
 
   return (
     <div style={styles.card}>
       <div style={styles.header}>
         <h3 style={styles.name}>{name || "Unknown Doctor"}</h3>
-        <span style={styles.badge}>⭐ {rating || "N/A"}</span>
+
+        {/* Top-right rating badge that doesn't affect layout */}
+        <div style={styles.badge} aria-label={`Rating ${rating ?? "N/A"}`}>
+          <span style={styles.star}>★</span>
+          <span style={styles.score}>{rating ?? "N/A"}</span>
+        </div>
       </div>
 
       <div style={styles.row}>
         <span style={styles.label}>Location</span>
-        <span style={styles.value}>{location}</span>
+        <span style={styles.value}>{location || "N/A"}</span>
       </div>
 
       <div style={styles.row}>
