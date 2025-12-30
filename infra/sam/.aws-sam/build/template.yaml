@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Outreach Platform - SQS + Lambda (workers)
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 256
+    Architectures:
+    - arm64
+    Environment:
+      Variables:
+        AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+Resources:
+  OutreachQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 60
+  StartOutreachFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: StartOutreachFunction
+      Handler: src/handlers/startOutreach.handler
+      Events:
+        OutreachSqsEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - OutreachQueue
+              - Arn
+            BatchSize: 1
+      Policies:
+      - AWSLambdaBasicExecutionRole
+    Metadata:
+      SamResourceId: StartOutreachFunction
+Outputs:
+  OutreachQueueUrl:
+    Value:
+      Ref: OutreachQueue
+  StartOutreachFunctionName:
+    Value:
+      Ref: StartOutreachFunction
