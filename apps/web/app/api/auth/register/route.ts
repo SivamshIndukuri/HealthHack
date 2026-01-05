@@ -19,9 +19,10 @@ export async function POST(req:Request){
     const passwordHash = await bcrypt.hash(password, 12);
     
     try{
+
         const { rows } = await pool.query(
             `INSERT INTO 
-            clinic.users (username, password, user_role) 
+            clinic.users (username, user_password, user_role) 
             VALUES($1, $2, $3)
             RETURNING user_id, username, user_role, created_at`,
             [username, passwordHash, "user"]

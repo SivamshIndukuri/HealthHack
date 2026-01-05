@@ -1,5 +1,8 @@
 import {Pool} from "pg";
 
+// run :
+// ln -s .env.local web/.env.local  from apps dir
+
 const pool = new Pool({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
