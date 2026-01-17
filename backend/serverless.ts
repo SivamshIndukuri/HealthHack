@@ -23,16 +23,18 @@ const serverlessConfiguration: AWS = {
       DB_PASSWORD: "${ssm:/healthhack/${self:provider.stage}/DB_PASSWORD}",
       DB_SSL: "${ssm:/healthhack/${self:provider.stage}/DB_SSL}",
       JWT_SECRET: "${ssm:/healthhack/JWT_SECRET}",
-      QUEUE_URL: "${ssm:/healthhack/${self:provider.stage}/QUEUE_URL}",
+
+      // ✅ use the queue created by this stack (matches IAM below)
+      QUEUE_URL: { Ref: "JobsQueue" },
+
       TWILIO_ACCOUNT_SID: "${ssm:/healthhack/${self:provider.stage}/TWILIO_ACCOUNT_SID}",
       TWILIO_AUTH_TOKEN: "${ssm:/healthhack/${self:provider.stage}/TWILIO_AUTH_TOKEN}",
-      TWILIO_NUMBER: "${ssm:/healthhack/${self:provider.stage}/TWILIO_NUMBER}"
+      TWILIO_NUMBER: "${ssm:/healthhack/${self:provider.stage}/TWILIO_NUMBER}",
     },
 
     iam: {
       role: {
         statements: [
-          // Needed for Lambdas in VPC (ENIs)
           {
             Effect: "Allow",
             Action: [
@@ -45,23 +47,16 @@ const serverlessConfiguration: AWS = {
             ],
             Resource: "*",
           },
-
           {
             Effect: "Allow",
-            Action: [
-              "ssm:GetParameter",
-              "ssm:GetParameters",
-              "ssm:GetParametersByPath",
-            ],
+            Action: ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"],
             Resource: "arn:aws:ssm:us-east-1:*:parameter/healthhack/*",
           },
-
           {
             Effect: "Allow",
             Action: ["kms:Decrypt"],
             Resource: "*",
           },
-
           {
             Effect: "Allow",
             Action: [
@@ -71,7 +66,7 @@ const serverlessConfiguration: AWS = {
               "sqs:GetQueueAttributes",
               "sqs:ChangeMessageVisibility",
             ],
-            Resource: [{ "Fn::GetAtt": ["JobsQueue", "Arn"] }],
+            Resource: { "Fn::GetAtt": ["JobsQueue", "Arn"] },
           },
         ],
       },
@@ -113,8 +108,6 @@ const serverlessConfiguration: AWS = {
       handler: "src/functions/twilio-make-call/handler.handler",
       events: [{ httpApi: { method: "POST", path: "/makeCall" } }],
     },
-
- 
     jobsWorker: {
       handler: "src/functions/jobs-worker/handler.handler",
       timeout: 30,
@@ -138,12 +131,11 @@ const serverlessConfiguration: AWS = {
           QueueName: "${self:service}-${self:provider.stage}-jobs-dlq",
         },
       },
-
       JobsQueue: {
         Type: "AWS::SQS::Queue",
         Properties: {
           QueueName: "${self:service}-${self:provider.stage}-jobs",
-          VisibilityTimeout: 60, 
+          VisibilityTimeout: 60,
           RedrivePolicy: {
             deadLetterTargetArn: { "Fn::GetAtt": ["JobsDLQ", "Arn"] },
             maxReceiveCount: 5,
@@ -151,15 +143,9 @@ const serverlessConfiguration: AWS = {
         },
       },
     },
-
-    
     Outputs: {
-      JobsQueueUrl: {
-        Value: { Ref: "JobsQueue" },
-      },
-      JobsQueueArn: {
-        Value: { "Fn::GetAtt": ["JobsQueue", "Arn"] },
-      },
+      JobsQueueUrl: { Value: { Ref: "JobsQueue" } },
+      JobsQueueArn: { Value: { "Fn::GetAtt": ["JobsQueue", "Arn"] } },
     },
   } as any,
 };
