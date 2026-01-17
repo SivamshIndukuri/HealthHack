@@ -23,7 +23,10 @@ const serverlessConfiguration: AWS = {
       DB_PASSWORD: "${ssm:/healthhack/${self:provider.stage}/DB_PASSWORD}",
       DB_SSL: "${ssm:/healthhack/${self:provider.stage}/DB_SSL}",
       JWT_SECRET: "${ssm:/healthhack/JWT_SECRET}",
-      QUEUE_URL: "${ssm:/healthhack/${self:provider.stage}/QUEUE_URL}"
+      QUEUE_URL: "${ssm:/healthhack/${self:provider.stage}/QUEUE_URL}",
+      TWILIO_ACCOUNT_SID: "${ssm:/healthhack/${self:provider.stage}/TWILIO_ACCOUNT_SID}",
+      TWILIO_AUTH_TOKEN: "${ssm:/healthhack/${self:provider.stage}/TWILIO_AUTH_TOKEN}",
+      TWILIO_NUMBER: "${ssm:/healthhack/${self:provider.stage}/TWILIO_NUMBER}"
     },
 
     iam: {
@@ -105,6 +108,10 @@ const serverlessConfiguration: AWS = {
     createPatients: {
       handler: "src/functions/create-patient/handler.handler",
       events: [{ httpApi: { method: "POST", path: "/createPatients" } }],
+    },
+    makeCall: {
+      handler: "src/functions/twilio-make-call/handler.handler",
+      events: [{ httpApi: { method: "POST", path: "/makeCall" } }],
     },
 
  
