@@ -12,7 +12,7 @@ const serverlessConfiguration: AWS = {
 
     vpc: {
       securityGroupIds: ["sg-0be76907e96d27806"],
-      subnetIds: ["subnet-0896145c233b9e36c", "subnet-03e9417cdc3c41585"]
+      subnetIds: ["subnet-0896145c233b9e36c", "subnet-03e9417cdc3c41585"],
     },
 
     environment: {
@@ -22,12 +22,14 @@ const serverlessConfiguration: AWS = {
       DB_USER: "${ssm:/healthhack/${self:provider.stage}/DB_USER}",
       DB_PASSWORD: "${ssm:/healthhack/${self:provider.stage}/DB_PASSWORD}",
       DB_SSL: "${ssm:/healthhack/${self:provider.stage}/DB_SSL}",
-      JWT_SECRET: "${ssm:/healthhack/JWT_SECRET}"
+      JWT_SECRET: "${ssm:/healthhack/JWT_SECRET}",
+      QUEUE_URL: "${ssm:/healthhack/${self:provider.stage}/QUEUE_URL}"
     },
 
     iam: {
       role: {
         statements: [
+          // Needed for Lambdas in VPC (ENIs)
           {
             Effect: "Allow",
             Action: [
@@ -51,11 +53,22 @@ const serverlessConfiguration: AWS = {
             Resource: "arn:aws:ssm:us-east-1:*:parameter/healthhack/*",
           },
 
-          
           {
             Effect: "Allow",
             Action: ["kms:Decrypt"],
             Resource: "*",
+          },
+
+          {
+            Effect: "Allow",
+            Action: [
+              "sqs:SendMessage",
+              "sqs:ReceiveMessage",
+              "sqs:DeleteMessage",
+              "sqs:GetQueueAttributes",
+              "sqs:ChangeMessageVisibility",
+            ],
+            Resource: [{ "Fn::GetAtt": ["JobsQueue", "Arn"] }],
           },
         ],
       },
@@ -85,7 +98,63 @@ const serverlessConfiguration: AWS = {
       handler: "src/functions/auth-logout/handler.handler",
       events: [{ httpApi: { method: "POST", path: "/auth/logout" } }],
     },
+    createDoctor: {
+      handler: "src/functions/create-doctor/handler.handler",
+      events: [{ httpApi: { method: "POST", path: "/createDoctor" } }],
+    },
+    createPatients: {
+      handler: "src/functions/create-patient/handler.handler",
+      events: [{ httpApi: { method: "POST", path: "/createPatients" } }],
+    },
+
+ 
+    jobsWorker: {
+      handler: "src/functions/jobs-worker/handler.handler",
+      timeout: 30,
+      events: [
+        {
+          sqs: {
+            arn: { "Fn::GetAtt": ["JobsQueue", "Arn"] },
+            batchSize: 10,
+            maximumBatchingWindow: 5,
+          },
+        },
+      ],
+    },
   },
+
+  resources: {
+    Resources: {
+      JobsDLQ: {
+        Type: "AWS::SQS::Queue",
+        Properties: {
+          QueueName: "${self:service}-${self:provider.stage}-jobs-dlq",
+        },
+      },
+
+      JobsQueue: {
+        Type: "AWS::SQS::Queue",
+        Properties: {
+          QueueName: "${self:service}-${self:provider.stage}-jobs",
+          VisibilityTimeout: 60, 
+          RedrivePolicy: {
+            deadLetterTargetArn: { "Fn::GetAtt": ["JobsDLQ", "Arn"] },
+            maxReceiveCount: 5,
+          },
+        },
+      },
+    },
+
+    
+    Outputs: {
+      JobsQueueUrl: {
+        Value: { Ref: "JobsQueue" },
+      },
+      JobsQueueArn: {
+        Value: { "Fn::GetAtt": ["JobsQueue", "Arn"] },
+      },
+    },
+  } as any,
 };
 
 module.exports = serverlessConfiguration;
