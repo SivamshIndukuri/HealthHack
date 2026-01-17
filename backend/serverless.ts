@@ -22,7 +22,9 @@ const serverlessConfiguration: AWS = {
       DB_USER: "${ssm:/healthhack/${self:provider.stage}/DB_USER}",
       DB_PASSWORD: "${ssm:/healthhack/${self:provider.stage}/DB_PASSWORD}",
       DB_SSL: "${ssm:/healthhack/${self:provider.stage}/DB_SSL}",
-      JWT_SECRET: "${ssm:/healthhack/JWT_SECRET}"
+      JWT_SECRET: "${ssm:/healthhack/JWT_SECRET}",
+      GOOGLE_MAPS_API_KEY: "${env:AIzaSyAo1GdWySR99L3ln2pzCHWEMvgA8IKtP_Y}",
+      GEOCODE_KEY: "${env:AIzaSyA_tsQzx77d991X223EJX3tZh_V0iSa6j}"
     },
 
     iam: {
@@ -85,6 +87,10 @@ const serverlessConfiguration: AWS = {
       handler: "src/functions/auth-logout/handler.handler",
       events: [{ httpApi: { method: "POST", path: "/auth/logout" } }],
     },
+    psychiatrists: {
+      handler: "src/functions/psychiatrists/handler.handler",
+      events: [{ httpApi: { path: "/psychiatrists", method: "GET" } }],
+    }
   },
 };
 
