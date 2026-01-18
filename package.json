@@ -16,6 +16,7 @@
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
     "bcryptjs": "^3.0.3",
+    "body-parser": "^2.2.2",
     "dotenv": "^17.2.3",
     "framer-motion": "^12.26.2",
     "jsonwebtoken": "^9.0.3",
