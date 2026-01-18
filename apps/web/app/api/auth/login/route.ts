@@ -1,10 +1,4 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import pool from "@/db/pool";
-import jwt from "jsonwebtoken";
-import { UserRow } from "@/types/user"
-import crypto from "crypto";
-
 
 
 // POST request send data to server to create or update resources 
