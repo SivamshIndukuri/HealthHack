@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
 
+// req
+// {
+//     "username":"sivamsh05@gmail.com",
+//     "password":"password1234"
+// }
+
+// res
+// {
+//     "user": {
+//         "userId": "54f108c8-dc0d-44ed-9ac7-207bbf591fa9",
+//         "username": "sivamsh05@gmail.com"
+//     }
+// }
 
 // POST request send data to server to create or update resources 
 export async function POST(req:Request){

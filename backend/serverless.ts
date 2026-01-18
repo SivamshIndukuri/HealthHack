@@ -112,12 +112,16 @@ const serverlessConfiguration: AWS = {
       events: [{ httpApi: { method: "POST", path: "/makeCall" } }],
     },
     findHospital:{
-      handler: "src/functions/hosptial/hospital-finder/handler.handler",
+      handler: "src/functions/hospital/hospital-finder/handler.handler",
       events: [{ httpApi: { method: "POST", path: "/findHospital" } }],
     },
     saveHospital:{
       handler: "src/functions/hospital/save-hospital/handler.handler",
       events: [{ httpApi: { method: "POST", path: "/saveHospital" } }],
+    },
+    getHospital:{
+      handler: "src/functions/hospital/get-hospitals/handler.handler",
+      events: [{ httpApi: { method: "POST", path: "/getHospital" } }],
     },
     getPatients:{
       handler: "src/functions/get-patients/handler.handler",

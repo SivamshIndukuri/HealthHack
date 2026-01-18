@@ -7,11 +7,35 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, password, rememberMe });
-    // TODO: Integrate login API here
+  
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          username: email, 
+          password,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        alert(data.error || "Login failed");
+        return;
+      }
+  
+      window.location.href = "/"; // change if needed
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("Something went wrong");
+    }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -21,7 +45,6 @@ export default function LoginPage() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
           <div>
             <label className="block text-gray-700 font-medium mb-1" htmlFor="email">
               Email
@@ -37,7 +60,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Password */}
+          
           <div>
             <label className="block text-gray-700 font-medium mb-1" htmlFor="password">
               Password
@@ -53,7 +76,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Remember Me + Forgot Password */}
+          
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-gray-700">
               <input
@@ -69,7 +92,7 @@ export default function LoginPage() {
             </a>
           </div>
 
-          {/* Submit Button */}
+          
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition"
@@ -78,7 +101,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Divider */}
         <div className="flex items-center my-6">
           <hr className="flex-1 border-gray-300" />
           <span className="px-2 text-gray-400">or</span>
