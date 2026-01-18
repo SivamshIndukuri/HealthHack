@@ -28,7 +28,8 @@
           "DB_NAME": "healthhack",
           "DB_USER": "siHealthHack",
           "DB_PASSWORD": "<REDACTED>",
-          "DB_SSL": "true"
+          "DB_SSL": "true",
+          "JWT_SECRET": "<REDACTED>"
         },
         "iam": {
           "role": {
@@ -73,6 +74,12 @@
               "Type": "AWS::Logs::LogGroup",
               "Properties": {
                 "LogGroupName": "/aws/lambda/healthhack-backend-dev-authRegister"
+              }
+            },
+            "AuthLoginLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/healthhack-backend-dev-authLogin"
               }
             },
             "IamRoleLambdaExecution": {
@@ -200,7 +207,7 @@
               "Properties": {
                 "Code": {
                   "S3Bucket": "serverless-framework-deployments-us-east-1-95af1221-b153",
-                  "S3Key": "serverless/healthhack-backend/dev/1767673975238-2026-01-06T04:32:55.238Z/healthhack-backend.zip"
+                  "S3Key": "serverless/healthhack-backend/dev/1767713622039-2026-01-06T15:33:42.039Z/healthhack-backend.zip"
                 },
                 "Handler": "src/functions/auth-register/handler.handler",
                 "Runtime": "nodejs20.x",
@@ -215,6 +222,7 @@
                     "DB_USER": "siHealthHack",
                     "DB_PASSWORD": "<REDACTED>",
                     "DB_SSL": "true",
+                    "JWT_SECRET": "<REDACTED>",
                     "NODE_OPTIONS": "--enable-source-maps"
                   }
                 },
@@ -238,14 +246,68 @@
                 "AuthRegisterLogGroup"
               ]
             },
-            "AuthRegisterLambdaVersionQ6O5JSNCDeb7LLqkpLUOIeFzIz93N7CHo5Zm9gmGwc": {
+            "AuthLoginLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-95af1221-b153",
+                  "S3Key": "serverless/healthhack-backend/dev/1767713622039-2026-01-06T15:33:42.039Z/healthhack-backend.zip"
+                },
+                "Handler": "src/functions/auth-login/handler.handler",
+                "Runtime": "nodejs20.x",
+                "FunctionName": "healthhack-backend-dev-authLogin",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "Environment": {
+                  "Variables": {
+                    "DB_HOST": "healthhack.c6tyswu4mfwg.us-east-1.rds.amazonaws.com",
+                    "DB_PORT": "5432",
+                    "DB_NAME": "healthhack",
+                    "DB_USER": "siHealthHack",
+                    "DB_PASSWORD": "<REDACTED>",
+                    "DB_SSL": "true",
+                    "JWT_SECRET": "<REDACTED>",
+                    "NODE_OPTIONS": "--enable-source-maps"
+                  }
+                },
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleLambdaExecution",
+                    "Arn"
+                  ]
+                },
+                "VpcConfig": {
+                  "SecurityGroupIds": [
+                    "sg-02c9bdda77b5ba015"
+                  ],
+                  "SubnetIds": [
+                    "subnet-0896145c233b9e36c",
+                    "subnet-03e9417cdc3c41585"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "AuthLoginLogGroup"
+              ]
+            },
+            "AuthRegisterLambdaVersionWxRIRmLHlGHiNTWE8iQQdWJrhasBniq3kPTqaAGEY": {
               "Type": "AWS::Lambda::Version",
               "DeletionPolicy": "Retain",
               "Properties": {
                 "FunctionName": {
                   "Ref": "AuthRegisterLambdaFunction"
                 },
-                "CodeSha256": "Pp0CRjIagnuRO1m2fy7d/22bmtzs9tpUUlHzgeGHC8s="
+                "CodeSha256": "emWXdutN7XUNCh5aeBlxrsGd9c97C8TVvfzQQSYgxuU="
+              }
+            },
+            "AuthLoginLambdaVersionX3cSVql9QfpEjSS8VOFHPjqEEJGu60PUxYuKfU0pQ6I": {
+              "Type": "AWS::Lambda::Version",
+              "DeletionPolicy": "Retain",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "AuthLoginLambdaFunction"
+                },
+                "CodeSha256": "emWXdutN7XUNCh5aeBlxrsGd9c97C8TVvfzQQSYgxuU="
               }
             },
             "HttpApi": {
@@ -361,6 +423,81 @@
                 }
               },
               "DependsOn": "HttpApiIntegrationAuthRegister"
+            },
+            "AuthLoginLambdaPermissionHttpApi": {
+              "Type": "AWS::Lambda::Permission",
+              "Properties": {
+                "FunctionName": {
+                  "Fn::GetAtt": [
+                    "AuthLoginLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":execute-api:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":",
+                      {
+                        "Ref": "HttpApi"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              }
+            },
+            "HttpApiIntegrationAuthLogin": {
+              "Type": "AWS::ApiGatewayV2::Integration",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "IntegrationType": "AWS_PROXY",
+                "IntegrationUri": {
+                  "Fn::GetAtt": [
+                    "AuthLoginLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "PayloadFormatVersion": "2.0",
+                "TimeoutInMillis": 30000
+              }
+            },
+            "HttpApiRoutePostAuthLogin": {
+              "Type": "AWS::ApiGatewayV2::Route",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "RouteKey": "POST /auth/login",
+                "Target": {
+                  "Fn::Join": [
+                    "/",
+                    [
+                      "integrations",
+                      {
+                        "Ref": "HttpApiIntegrationAuthLogin"
+                      }
+                    ]
+                  ]
+                }
+              },
+              "DependsOn": "HttpApiIntegrationAuthLogin"
             }
           },
           "Outputs": {
@@ -373,10 +510,19 @@
             "AuthRegisterLambdaFunctionQualifiedArn": {
               "Description": "Current Lambda function version",
               "Value": {
-                "Ref": "AuthRegisterLambdaVersionQ6O5JSNCDeb7LLqkpLUOIeFzIz93N7CHo5Zm9gmGwc"
+                "Ref": "AuthRegisterLambdaVersionWxRIRmLHlGHiNTWE8iQQdWJrhasBniq3kPTqaAGEY"
               },
               "Export": {
                 "Name": "sls-healthhack-backend-dev-AuthRegisterLambdaFunctionQualifiedArn"
+              }
+            },
+            "AuthLoginLambdaFunctionQualifiedArn": {
+              "Description": "Current Lambda function version",
+              "Value": {
+                "Ref": "AuthLoginLambdaVersionX3cSVql9QfpEjSS8VOFHPjqEEJGu60PUxYuKfU0pQ6I"
+              },
+              "Export": {
+                "Name": "sls-healthhack-backend-dev-AuthLoginLambdaFunctionQualifiedArn"
               }
             },
             "HttpApiId": {
@@ -447,7 +593,30 @@
           "timeout": 6,
           "runtime": "nodejs20.x",
           "vpc": {},
-          "versionLogicalId": "AuthRegisterLambdaVersionQ6O5JSNCDeb7LLqkpLUOIeFzIz93N7CHo5Zm9gmGwc"
+          "versionLogicalId": "AuthRegisterLambdaVersionWxRIRmLHlGHiNTWE8iQQdWJrhasBniq3kPTqaAGEY"
+        },
+        "authLogin": {
+          "handler": "src/functions/auth-login/handler.handler",
+          "events": [
+            {
+              "httpApi": {
+                "method": "POST",
+                "path": "/auth/login"
+              },
+              "resolvedMethod": "POST",
+              "resolvedPath": "/auth/login"
+            }
+          ],
+          "name": "healthhack-backend-dev-authLogin",
+          "environment": {
+            "NODE_OPTIONS": "--enable-source-maps"
+          },
+          "package": {},
+          "memory": 1024,
+          "timeout": 6,
+          "runtime": "nodejs20.x",
+          "vpc": {},
+          "versionLogicalId": "AuthLoginLambdaVersionX3cSVql9QfpEjSS8VOFHPjqEEJGu60PUxYuKfU0pQ6I"
         }
       }
     },
@@ -474,7 +643,8 @@
         "DB_NAME": "healthhack",
         "DB_USER": "siHealthHack",
         "DB_PASSWORD": "<REDACTED>",
-        "DB_SSL": "true"
+        "DB_SSL": "true",
+        "JWT_SECRET": "<REDACTED>"
       },
       "iam": {
         "role": {
@@ -519,6 +689,12 @@
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
               "LogGroupName": "/aws/lambda/healthhack-backend-dev-authRegister"
+            }
+          },
+          "AuthLoginLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/healthhack-backend-dev-authLogin"
             }
           },
           "IamRoleLambdaExecution": {
@@ -646,7 +822,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-95af1221-b153",
-                "S3Key": "serverless/healthhack-backend/dev/1767673975238-2026-01-06T04:32:55.238Z/healthhack-backend.zip"
+                "S3Key": "serverless/healthhack-backend/dev/1767713622039-2026-01-06T15:33:42.039Z/healthhack-backend.zip"
               },
               "Handler": "src/functions/auth-register/handler.handler",
               "Runtime": "nodejs20.x",
@@ -661,6 +837,7 @@
                   "DB_USER": "siHealthHack",
                   "DB_PASSWORD": "<REDACTED>",
                   "DB_SSL": "true",
+                  "JWT_SECRET": "<REDACTED>",
                   "NODE_OPTIONS": "--enable-source-maps"
                 }
               },
@@ -684,14 +861,68 @@
               "AuthRegisterLogGroup"
             ]
           },
-          "AuthRegisterLambdaVersionQ6O5JSNCDeb7LLqkpLUOIeFzIz93N7CHo5Zm9gmGwc": {
+          "AuthLoginLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-95af1221-b153",
+                "S3Key": "serverless/healthhack-backend/dev/1767713622039-2026-01-06T15:33:42.039Z/healthhack-backend.zip"
+              },
+              "Handler": "src/functions/auth-login/handler.handler",
+              "Runtime": "nodejs20.x",
+              "FunctionName": "healthhack-backend-dev-authLogin",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "DB_HOST": "healthhack.c6tyswu4mfwg.us-east-1.rds.amazonaws.com",
+                  "DB_PORT": "5432",
+                  "DB_NAME": "healthhack",
+                  "DB_USER": "siHealthHack",
+                  "DB_PASSWORD": "<REDACTED>",
+                  "DB_SSL": "true",
+                  "JWT_SECRET": "<REDACTED>",
+                  "NODE_OPTIONS": "--enable-source-maps"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "VpcConfig": {
+                "SecurityGroupIds": [
+                  "sg-02c9bdda77b5ba015"
+                ],
+                "SubnetIds": [
+                  "subnet-0896145c233b9e36c",
+                  "subnet-03e9417cdc3c41585"
+                ]
+              }
+            },
+            "DependsOn": [
+              "AuthLoginLogGroup"
+            ]
+          },
+          "AuthRegisterLambdaVersionWxRIRmLHlGHiNTWE8iQQdWJrhasBniq3kPTqaAGEY": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AuthRegisterLambdaFunction"
               },
-              "CodeSha256": "Pp0CRjIagnuRO1m2fy7d/22bmtzs9tpUUlHzgeGHC8s="
+              "CodeSha256": "emWXdutN7XUNCh5aeBlxrsGd9c97C8TVvfzQQSYgxuU="
+            }
+          },
+          "AuthLoginLambdaVersionX3cSVql9QfpEjSS8VOFHPjqEEJGu60PUxYuKfU0pQ6I": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "AuthLoginLambdaFunction"
+              },
+              "CodeSha256": "emWXdutN7XUNCh5aeBlxrsGd9c97C8TVvfzQQSYgxuU="
             }
           },
           "HttpApi": {
@@ -807,6 +1038,81 @@
               }
             },
             "DependsOn": "HttpApiIntegrationAuthRegister"
+          },
+          "AuthLoginLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "AuthLoginLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationAuthLogin": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "Fn::GetAtt": [
+                  "AuthLoginLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePostAuthLogin": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "POST /auth/login",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationAuthLogin"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationAuthLogin"
           }
         },
         "Outputs": {
@@ -819,10 +1125,19 @@
           "AuthRegisterLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AuthRegisterLambdaVersionQ6O5JSNCDeb7LLqkpLUOIeFzIz93N7CHo5Zm9gmGwc"
+              "Ref": "AuthRegisterLambdaVersionWxRIRmLHlGHiNTWE8iQQdWJrhasBniq3kPTqaAGEY"
             },
             "Export": {
               "Name": "sls-healthhack-backend-dev-AuthRegisterLambdaFunctionQualifiedArn"
+            }
+          },
+          "AuthLoginLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "AuthLoginLambdaVersionX3cSVql9QfpEjSS8VOFHPjqEEJGu60PUxYuKfU0pQ6I"
+            },
+            "Export": {
+              "Name": "sls-healthhack-backend-dev-AuthLoginLambdaFunctionQualifiedArn"
             }
           },
           "HttpApiId": {
@@ -871,7 +1186,7 @@
       "serviceProvider": null,
       "instanceParameters": null
     },
-    "serviceRawFile": "import type { AWS } from \"@serverless/typescript\";\n\nconst serverlessConfiguration: AWS = {\n  service: \"healthhack-backend\",\n\n  provider: {\n    name: \"aws\",\n    runtime: \"nodejs20.x\",\n    region: \"us-east-1\",\n    stage: \"${opt:stage, 'dev'}\",\n    httpApi: { cors: true },\n\n    // --- Put Lambda in the same VPC as your PRIVATE RDS ---\n    vpc: {\n      securityGroupIds: [\"sg-02c9bdda77b5ba015\"],\n      subnetIds: [\"subnet-0896145c233b9e36c\", \"subnet-03e9417cdc3c41585\"]\n    },\n\n    // --- Load DB creds from SSM Parameter Store (no secrets in git) ---\n    environment: {\n      DB_HOST: \"${ssm:/healthhack/${self:provider.stage}/DB_HOST}\",\n      DB_PORT: \"${ssm:/healthhack/${self:provider.stage}/DB_PORT}\",\n      DB_NAME: \"${ssm:/healthhack/${self:provider.stage}/DB_NAME}\",\n      DB_USER: \"${ssm:/healthhack/${self:provider.stage}/DB_USER}\",\n      DB_PASSWORD: \"${ssm:/healthhack/${self:provider.stage}/DB_PASSWORD}\",\n      DB_SSL: \"${ssm:/healthhack/${self:provider.stage}/DB_SSL}\",\n    },\n\n    // --- Permissions ---\n    iam: {\n      role: {\n        statements: [\n          // Required for Lambda-in-VPC (ENI creation)\n          {\n            Effect: \"Allow\",\n            Action: [\n              \"ec2:CreateNetworkInterface\",\n              \"ec2:DescribeNetworkInterfaces\",\n              \"ec2:DeleteNetworkInterface\",\n              \"ec2:DescribeSubnets\",\n              \"ec2:DescribeSecurityGroups\",\n              \"ec2:DescribeVpcs\",\n            ],\n            Resource: \"*\",\n          },\n\n          // Allow reading SSM parameters for /healthhack/*\n          {\n            Effect: \"Allow\",\n            Action: [\n              \"ssm:GetParameter\",\n              \"ssm:GetParameters\",\n              \"ssm:GetParametersByPath\",\n            ],\n            Resource: \"arn:aws:ssm:us-east-1:*:parameter/healthhack/*\",\n          },\n\n          // Needed to decrypt SecureString params (can tighten later)\n          {\n            Effect: \"Allow\",\n            Action: [\"kms:Decrypt\"],\n            Resource: \"*\",\n          },\n        ],\n      },\n    },\n  },\n\n  build: {\n    esbuild: {\n      bundle: true,\n      minify: false,\n      sourcemap: true,\n      target: \"node20\",\n      platform: \"node\",\n    },\n  },\n\n  functions: {\n    authRegister: {\n      handler: \"src/functions/auth-register/handler.handler\",\n      events: [{ httpApi: { method: \"POST\", path: \"/auth/register\" } }],\n    },\n  },\n};\n\nmodule.exports = serverlessConfiguration;\n",
+    "serviceRawFile": "import type { AWS } from \"@serverless/typescript\";\n\nconst serverlessConfiguration: AWS = {\n  service: \"healthhack-backend\",\n\n  provider: {\n    name: \"aws\",\n    runtime: \"nodejs20.x\",\n    region: \"us-east-1\",\n    stage: \"${opt:stage, 'dev'}\",\n    httpApi: { cors: true },\n\n    vpc: {\n      securityGroupIds: [\"sg-02c9bdda77b5ba015\"],\n      subnetIds: [\"subnet-0896145c233b9e36c\", \"subnet-03e9417cdc3c41585\"]\n    },\n\n    environment: {\n      DB_HOST: \"${ssm:/healthhack/${self:provider.stage}/DB_HOST}\",\n      DB_PORT: \"${ssm:/healthhack/${self:provider.stage}/DB_PORT}\",\n      DB_NAME: \"${ssm:/healthhack/${self:provider.stage}/DB_NAME}\",\n      DB_USER: \"${ssm:/healthhack/${self:provider.stage}/DB_USER}\",\n      DB_PASSWORD: \"${ssm:/healthhack/${self:provider.stage}/DB_PASSWORD}\",\n      DB_SSL: \"${ssm:/healthhack/${self:provider.stage}/DB_SSL}\",\n      JWT_SECRET: \"${ssm:/healthhack/JWT_SECRET}\"\n    },\n\n    iam: {\n      role: {\n        statements: [\n          {\n            Effect: \"Allow\",\n            Action: [\n              \"ec2:CreateNetworkInterface\",\n              \"ec2:DescribeNetworkInterfaces\",\n              \"ec2:DeleteNetworkInterface\",\n              \"ec2:DescribeSubnets\",\n              \"ec2:DescribeSecurityGroups\",\n              \"ec2:DescribeVpcs\",\n            ],\n            Resource: \"*\",\n          },\n\n          {\n            Effect: \"Allow\",\n            Action: [\n              \"ssm:GetParameter\",\n              \"ssm:GetParameters\",\n              \"ssm:GetParametersByPath\",\n            ],\n            Resource: \"arn:aws:ssm:us-east-1:*:parameter/healthhack/*\",\n          },\n\n          \n          {\n            Effect: \"Allow\",\n            Action: [\"kms:Decrypt\"],\n            Resource: \"*\",\n          },\n        ],\n      },\n    },\n  },\n\n  build: {\n    esbuild: {\n      bundle: true,\n      minify: false,\n      sourcemap: true,\n      target: \"node20\",\n      platform: \"node\",\n    },\n  },\n\n  functions: {\n    authRegister: {\n      handler: \"src/functions/auth-register/handler.handler\",\n      events: [{ httpApi: { method: \"POST\", path: \"/auth/register\" } }],\n    },\n    authLogin: {\n      handler: \"src/functions/auth-login/handler.handler\",\n      events: [{ httpApi: { method: \"POST\", path: \"/auth/login\" } }],\n    },\n  },\n};\n\nmodule.exports = serverlessConfiguration;\n",
     "command": [
       "deploy"
     ],
@@ -886,12 +1201,12 @@
     "serviceProviderAwsCfStackName": "healthhack-backend-dev",
     "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:078096476192:stack/healthhack-backend-dev/5506d130-eaac-11f0-b385-0e09c3e131e3",
     "serviceProviderAwsCfStackCreated": "2026-01-06T03:03:53.146Z",
-    "serviceProviderAwsCfStackUpdated": "2026-01-06T04:30:05.919Z",
-    "serviceProviderAwsCfStackStatus": "UPDATE_ROLLBACK_COMPLETE",
+    "serviceProviderAwsCfStackUpdated": "2026-01-06T15:24:45.749Z",
+    "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
     "serviceProviderAwsCfStackOutputs": [
       {
         "OutputKey": "AuthRegisterLambdaFunctionQualifiedArn",
-        "OutputValue": "arn:aws:lambda:us-east-1:078096476192:function:healthhack-backend-dev-authRegister:3",
+        "OutputValue": "arn:aws:lambda:us-east-1:078096476192:function:healthhack-backend-dev-authRegister:7",
         "Description": "Current Lambda function version",
         "ExportName": "sls-healthhack-backend-dev-AuthRegisterLambdaFunctionQualifiedArn"
       },
@@ -900,6 +1215,12 @@
         "OutputValue": "x5d1ctn3ub",
         "Description": "Id of the HTTP API",
         "ExportName": "sls-healthhack-backend-dev-HttpApiId"
+      },
+      {
+        "OutputKey": "AuthLoginLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:078096476192:function:healthhack-backend-dev-authLogin:2",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-healthhack-backend-dev-AuthLoginLambdaFunctionQualifiedArn"
       },
       {
         "OutputKey": "ServerlessDeploymentBucketName",
@@ -921,6 +1242,12 @@
           "Type": "AWS::Logs::LogGroup",
           "Properties": {
             "LogGroupName": "/aws/lambda/healthhack-backend-dev-authRegister"
+          }
+        },
+        "AuthLoginLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/healthhack-backend-dev-authLogin"
           }
         },
         "IamRoleLambdaExecution": {
@@ -1048,7 +1375,7 @@
           "Properties": {
             "Code": {
               "S3Bucket": "serverless-framework-deployments-us-east-1-95af1221-b153",
-              "S3Key": "serverless/healthhack-backend/dev/1767673975238-2026-01-06T04:32:55.238Z/healthhack-backend.zip"
+              "S3Key": "serverless/healthhack-backend/dev/1767713622039-2026-01-06T15:33:42.039Z/healthhack-backend.zip"
             },
             "Handler": "src/functions/auth-register/handler.handler",
             "Runtime": "nodejs20.x",
@@ -1063,6 +1390,7 @@
                 "DB_USER": "siHealthHack",
                 "DB_PASSWORD": "<REDACTED>",
                 "DB_SSL": "true",
+                "JWT_SECRET": "<REDACTED>",
                 "NODE_OPTIONS": "--enable-source-maps"
               }
             },
@@ -1086,14 +1414,68 @@
             "AuthRegisterLogGroup"
           ]
         },
-        "AuthRegisterLambdaVersionQ6O5JSNCDeb7LLqkpLUOIeFzIz93N7CHo5Zm9gmGwc": {
+        "AuthLoginLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-95af1221-b153",
+              "S3Key": "serverless/healthhack-backend/dev/1767713622039-2026-01-06T15:33:42.039Z/healthhack-backend.zip"
+            },
+            "Handler": "src/functions/auth-login/handler.handler",
+            "Runtime": "nodejs20.x",
+            "FunctionName": "healthhack-backend-dev-authLogin",
+            "MemorySize": 1024,
+            "Timeout": 6,
+            "Environment": {
+              "Variables": {
+                "DB_HOST": "healthhack.c6tyswu4mfwg.us-east-1.rds.amazonaws.com",
+                "DB_PORT": "5432",
+                "DB_NAME": "healthhack",
+                "DB_USER": "siHealthHack",
+                "DB_PASSWORD": "<REDACTED>",
+                "DB_SSL": "true",
+                "JWT_SECRET": "<REDACTED>",
+                "NODE_OPTIONS": "--enable-source-maps"
+              }
+            },
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            },
+            "VpcConfig": {
+              "SecurityGroupIds": [
+                "sg-02c9bdda77b5ba015"
+              ],
+              "SubnetIds": [
+                "subnet-0896145c233b9e36c",
+                "subnet-03e9417cdc3c41585"
+              ]
+            }
+          },
+          "DependsOn": [
+            "AuthLoginLogGroup"
+          ]
+        },
+        "AuthRegisterLambdaVersionWxRIRmLHlGHiNTWE8iQQdWJrhasBniq3kPTqaAGEY": {
           "Type": "AWS::Lambda::Version",
           "DeletionPolicy": "Retain",
           "Properties": {
             "FunctionName": {
               "Ref": "AuthRegisterLambdaFunction"
             },
-            "CodeSha256": "Pp0CRjIagnuRO1m2fy7d/22bmtzs9tpUUlHzgeGHC8s="
+            "CodeSha256": "emWXdutN7XUNCh5aeBlxrsGd9c97C8TVvfzQQSYgxuU="
+          }
+        },
+        "AuthLoginLambdaVersionX3cSVql9QfpEjSS8VOFHPjqEEJGu60PUxYuKfU0pQ6I": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "AuthLoginLambdaFunction"
+            },
+            "CodeSha256": "emWXdutN7XUNCh5aeBlxrsGd9c97C8TVvfzQQSYgxuU="
           }
         },
         "HttpApi": {
@@ -1208,6 +1590,81 @@
             }
           },
           "DependsOn": "HttpApiIntegrationAuthRegister"
+        },
+        "AuthLoginLambdaPermissionHttpApi": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Fn::GetAtt": [
+                "AuthLoginLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":execute-api:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  "/*"
+                ]
+              ]
+            }
+          }
+        },
+        "HttpApiIntegrationAuthLogin": {
+          "Type": "AWS::ApiGatewayV2::Integration",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": {
+              "Fn::GetAtt": [
+                "AuthLoginLambdaFunction",
+                "Arn"
+              ]
+            },
+            "PayloadFormatVersion": "2.0",
+            "TimeoutInMillis": 30000
+          }
+        },
+        "HttpApiRoutePostAuthLogin": {
+          "Type": "AWS::ApiGatewayV2::Route",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "RouteKey": "POST /auth/login",
+            "Target": {
+              "Fn::Join": [
+                "/",
+                [
+                  "integrations",
+                  {
+                    "Ref": "HttpApiIntegrationAuthLogin"
+                  }
+                ]
+              ]
+            }
+          },
+          "DependsOn": "HttpApiIntegrationAuthLogin"
         }
       },
       "Outputs": {
@@ -1220,10 +1677,19 @@
         "AuthRegisterLambdaFunctionQualifiedArn": {
           "Description": "Current Lambda function version",
           "Value": {
-            "Ref": "AuthRegisterLambdaVersionQ6O5JSNCDeb7LLqkpLUOIeFzIz93N7CHo5Zm9gmGwc"
+            "Ref": "AuthRegisterLambdaVersionWxRIRmLHlGHiNTWE8iQQdWJrhasBniq3kPTqaAGEY"
           },
           "Export": {
             "Name": "sls-healthhack-backend-dev-AuthRegisterLambdaFunctionQualifiedArn"
+          }
+        },
+        "AuthLoginLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "AuthLoginLambdaVersionX3cSVql9QfpEjSS8VOFHPjqEEJGu60PUxYuKfU0pQ6I"
+          },
+          "Export": {
+            "Name": "sls-healthhack-backend-dev-AuthLoginLambdaFunctionQualifiedArn"
           }
         },
         "HttpApiId": {
