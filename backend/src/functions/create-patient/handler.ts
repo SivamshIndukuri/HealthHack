@@ -1,10 +1,10 @@
 import { getPool } from "../../libs/db/db"; // adjust if your path is ../../libs/db
 import { auth } from "../../libs/auth/auth";
-import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+// import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 
-const sqs = new SQSClient({ region:"us-east-1"}); 
-const QUEUE_URL = process.env.QUEUE_URL!;
+// const sqs = new SQSClient({ region:"us-east-1"}); 
+// const QUEUE_URL = process.env.QUEUE_URL!;
 
 // input auth token, userId, doctor, name patients info
 export const handler = async (event: any) => {
@@ -121,28 +121,10 @@ export const handler = async (event: any) => {
         return{
             statusCode: 500,
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ success: "Failed to insert patient" }),
+            body: JSON.stringify({ error: "Failed to insert patient" }),
         }
     }
 
-    let messageId: string | undefined;
-
-    try {
-        const result = await sqs.send(
-            new SendMessageCommand({
-            QueueUrl: QUEUE_URL,
-            MessageBody: JSON.stringify({ patientId }),
-            })
-        );
-        messageId = result.MessageId;
-    } catch (err) {
-        console.error("SQS_SEND_ERROR:", err);
-        return {
-        statusCode: 500,
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ error: "SQS send failed" }),
-        };
-    }
 
     return {
         statusCode: 200,

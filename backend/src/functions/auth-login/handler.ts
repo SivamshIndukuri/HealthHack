@@ -74,7 +74,7 @@ export const handler = async (event: any) => {
         }
     )
 
-    // 4. Set Refresh Token 
+    
     let refreshToken: string;
 
     try{
