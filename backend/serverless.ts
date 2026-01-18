@@ -30,6 +30,9 @@ const serverlessConfiguration: AWS = {
       TWILIO_ACCOUNT_SID: "${ssm:/healthhack/${self:provider.stage}/TWILIO_ACCOUNT_SID}",
       TWILIO_AUTH_TOKEN: "${ssm:/healthhack/${self:provider.stage}/TWILIO_AUTH_TOKEN}",
       TWILIO_NUMBER: "${ssm:/healthhack/${self:provider.stage}/TWILIO_NUMBER}",
+
+      GOOGLE_MAPS_API_KEY: "${ssm:/healthhack/${self:provider.stage}/GOOGLE_MAPS_API_KEY}",
+      GEOCODE_KEY: "${ssm:/healthhack/${self:provider.stage}/GEOCODE_KEY}"
     },
 
     iam: {
@@ -107,6 +110,18 @@ const serverlessConfiguration: AWS = {
     makeCall: {
       handler: "src/functions/twilio-make-call/handler.handler",
       events: [{ httpApi: { method: "POST", path: "/makeCall" } }],
+    },
+    findHospital:{
+      handler: "src/functions/hosptial/hospital-finder/handler.handler",
+      events: [{ httpApi: { method: "POST", path: "/findHospital" } }],
+    },
+    saveHospital:{
+      handler: "src/functions/hospital/save-hospital/handler.handler",
+      events: [{ httpApi: { method: "POST", path: "/saveHospital" } }],
+    },
+    getPatients:{
+      handler: "src/functions/get-patients/handler.handler",
+      events: [{ httpApi: { method: "POST", path: "/getPatients" } }],
     },
     jobsWorker: {
       handler: "src/functions/jobs-worker/handler.handler",
