@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SideNav({
   setOpenPatientDialog,
@@ -10,46 +9,107 @@ export default function SideNav({
   setOpenPatientDialog: (open: boolean) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const buttonBg = 'bg-blue-100'; // soft pastel blue
-  const buttonHover = 'hover:bg-blue-200';
 
   return (
     <div
-      className={`flex flex-col ${
-        collapsed ? 'w-20' : 'w-60'
-      } transition-all duration-300 bg-white border-r border-gray-200 h-screen p-4 gap-4 shadow-sm`}
+      className={`
+        flex flex-col
+        ${collapsed ? 'w-16' : 'w-44'}
+        transition-[width] duration-300 ease-in-out
+        bg-blue-50
+        border-r border-blue-100
+        h-screen
+        px-2 py-4
+        gap-3
+      `}
     >
       {/* Collapse Toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className={`flex items-center justify-center rounded-lg p-2 ${buttonBg} ${buttonHover}`}
+        className="flex items-center justify-center rounded-md p-2 hover:bg-blue-100 transition"
       >
-        <Image src="/options.png" alt="Toggle" width={24} height={24} />
+        <Image
+          src="/close.png"
+          alt="Toggle"
+          width={32}
+          height={32}
+          className={`
+            w-5 h-5
+            transition-transform duration-300 ease-in-out
+            ${collapsed ? 'rotate-180' : 'rotate-0'}
+            opacity-70
+          `}
+        />
       </button>
+
+      {/* Divider */}
+      <div className="h-px bg-blue-100 my-1" />
 
       {/* Create Patient Button */}
       <button
         onClick={() => setOpenPatientDialog(true)}
-        className={`flex items-center gap-3 rounded-lg px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-700 transition`}
+        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition overflow-hidden"
       >
-        <Image src="/current.png" alt="Create" width={24} height={24} />
-        {!collapsed && 'Create Patient'}
+        <Image
+          src="/create.png"
+          alt="Create"
+          width={32}
+          height={32}
+          className="w-5 h-5"
+        />
+        <span
+          className={`
+            whitespace-nowrap
+            transition-all duration-200
+            ${collapsed ? 'opacity-0 translate-x-2' : 'opacity-100 translate-x-0'}
+          `}
+        >
+          Create Patient
+        </span>
       </button>
 
       {/* Active Button */}
       <button
-        className={`flex items-center gap-3 rounded-lg px-4 py-2 font-medium text-gray-900 ${buttonBg} ${buttonHover} transition`}
+        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-100 transition overflow-hidden"
       >
-        <Image src="/current.png" alt="Active" width={24} height={24} />
-        {!collapsed && 'Active'}
+        <Image
+          src="/active.png"
+          alt="Active"
+          width={32}
+          height={32}
+          className="w-5 h-5"
+        />
+        <span
+          className={`
+            whitespace-nowrap
+            transition-all duration-200
+            ${collapsed ? 'opacity-0 translate-x-2' : 'opacity-100 translate-x-0'}
+          `}
+        >
+          Active
+        </span>
       </button>
 
       {/* Archived Button */}
       <button
-        className={`flex items-center gap-3 rounded-lg px-4 py-2 font-medium text-gray-900 ${buttonBg} ${buttonHover} transition`}
+        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-100 transition overflow-hidden"
       >
-        <Image src="/archive.png" alt="Archived" width={24} height={24} />
-        {!collapsed && 'Archived'}
+        <Image
+          src="/archive.png"
+          alt="Archived"
+          width={32}
+          height={32}
+          className="w-5 h-5"
+        />
+        <span
+          className={`
+            whitespace-nowrap
+            transition-all duration-200
+            ${collapsed ? 'opacity-0 translate-x-2' : 'opacity-100 translate-x-0'}
+          `}
+        >
+          Archived
+        </span>
       </button>
     </div>
   );

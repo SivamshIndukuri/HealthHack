@@ -25,7 +25,7 @@ export default function DashboardHeader() {
 
         {/* Search */}
         <div className="flex-1 min-w-[200px]">
-          <SearchBar placeholder="Search patients, hospitals…" />
+          <SearchBar placeholder="Search patients" />
         </div>
 
         {/* Login/Profile Button */}

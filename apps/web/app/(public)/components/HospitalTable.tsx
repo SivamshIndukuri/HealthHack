@@ -48,7 +48,7 @@ export default function HospitalTable({ patientId }: { patientId: string }) {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-xs font-medium text-gray-500">
             <tr>
-              <th className="px-4 py-3">Hospital</th>
+              <th className="px-4 py-3">Provider</th>
               <th className="px-4 py-3">Phone</th>
               <th className="px-4 py-3">Ranking</th>
               <th className="px-4 py-3">Status</th>

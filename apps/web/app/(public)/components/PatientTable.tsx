@@ -128,13 +128,16 @@ export default function PatientTable() {
     fetchPatients();
   }, []);
 
+  const selectedPatient = patients.find(
+    (p) => p.patient_id === selectedPatientId
+  );
+
   if (loading) {
     return <div className="text-sm text-gray-500">Loading patients…</div>;
   }
 
   return (
     <>
-      {/* ---------------- Layout Container ---------------- */}
       <div
         className={`flex gap-6 transition-all duration-300 ease-in-out ${
           selectedPatientId ? 'flex-row' : 'flex-col'
@@ -153,7 +156,7 @@ export default function PatientTable() {
                   <th className="px-4 py-3">Patient</th>
                   <th className="px-4 py-3">Phone</th>
                   <th className="px-4 py-3">Insurance</th>
-                  <th className="px-4 py-3">Score</th>
+                  <th className="px-4 py-3">EPDS Score</th>
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
@@ -220,7 +223,8 @@ export default function PatientTable() {
             >
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Hospitals
+                  Providers for {selectedPatient?.patient_first_name}{' '}
+                  {selectedPatient?.patient_last_name}
                 </h2>
                 <button
                   onClick={() => setSelectedPatientId(null)}
@@ -236,7 +240,6 @@ export default function PatientTable() {
         </AnimatePresence>
       </div>
 
-      {/* ---------------- Patient Info Dialog ---------------- */}
       {showPatientInfo && (
         <PatientInfoDialog
           patient={showPatientInfo}
