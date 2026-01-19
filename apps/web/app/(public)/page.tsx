@@ -1,15 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardHeader from './components/DashboardHeader';
 import SideNav from './components/SideNav';
-import PatientTable from '../(public)/components/PatientTable';
+import PatientTable, { Patient } from './components/PatientTable';
 import CreatePatientDialog from './components/CreatePatientDialog';
 import AppointmentDetailDialog from './components/AppointmentDetailDialog';
 
 export default function DashboardPage() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [openAppointmentDialog, setOpenAppointmentDialog] = useState(false);
+
+  // ---------- Lifted Patients State ----------
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patientsLoading, setPatientsLoading] = useState(true);
+
+  // ---------- Fetch Patients Function ----------
+  async function fetchPatients() {
+    setPatientsLoading(true);
+    try {
+      const res = await fetch('/api/patients/getPatients/');
+      const data = await res.json();
+      setPatients(data.patients || []);
+    } catch (err) {
+      console.error('Failed to load patients', err);
+    } finally {
+      setPatientsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -27,9 +49,13 @@ export default function DashboardPage() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          <PatientTable />
+          <PatientTable
+            patients={patients}
+            setPatients={setPatients}
+            loading={patientsLoading}
+          />
 
-          {/* Optional: appointment dialog trigger can live elsewhere later */}
+          {/* Optional: appointment dialog trigger */}
           {openAppointmentDialog && (
             <AppointmentDetailDialog
               appointment={{
@@ -55,6 +81,7 @@ export default function DashboardPage() {
       <CreatePatientDialog
         open={openPatientDialog}
         onClose={() => setOpenPatientDialog(false)}
+        refreshPatients={fetchPatients} // pass fetch function for instant refresh
       />
     </div>
   );

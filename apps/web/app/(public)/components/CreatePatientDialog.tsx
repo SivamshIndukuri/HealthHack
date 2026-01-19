@@ -3,19 +3,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --------------------------------------------------
-// CreatePatientDialog
-// --------------------------------------------------
-// Usage:
-// <CreatePatientDialog open={open} onClose={() => setOpen(false)} />
-// --------------------------------------------------
-
 export default function CreatePatientDialog({
   open,
   onClose,
+  refreshPatients,
 }: {
   open: boolean;
   onClose: () => void;
+  refreshPatients?: () => void; // function to refresh table after creation
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +27,7 @@ export default function CreatePatientDialog({
     email: '',
     address: '',
     facilityType: '',
-    radius: '', // in meters
+    radius: '',
   });
 
   function updateField(key: string, value: string) {
@@ -44,7 +39,6 @@ export default function CreatePatientDialog({
     setError(null);
 
     try {
-      // 1️⃣ Create patient
       const res = await fetch('/api/patients/createPatients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,20 +56,22 @@ export default function CreatePatientDialog({
 
       const patientId = data.patientId;
 
-      // 2️⃣ Call hospital find API
-      const hospitalRes = await fetch('http://localhost:3000/api/hospital/findHospital', {
+      // Refresh the patient table after creation
+      if (refreshPatients) {
+        await refreshPatients();
+      }
+
+      // Optional: Call hospital find API
+      await fetch('http://localhost:3000/api/hospital/findHospital', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId,
           address: form.address,
-          query: form.facilityType || 'hospital', // default to "hospital"
+          query: form.facilityType || 'hospital',
           radius: Number(form.radius) || 5000,
         }),
       });
-
-      const hospitalData = await hospitalRes.json();
-      console.log('Hospital Search Response:', hospitalData);
 
       onClose();
     } catch (err: any) {
@@ -95,10 +91,7 @@ export default function CreatePatientDialog({
           exit={{ opacity: 0 }}
         >
           {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={onClose}
-          />
+          <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
           {/* Dialog */}
           <motion.div
@@ -119,24 +112,70 @@ export default function CreatePatientDialog({
 
             {/* Form */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Input label="Doctor First Name" value={form.doctorFirstName} onChange={(v) => updateField('doctorFirstName', v)} />
-              <Input label="Doctor Last Name" value={form.doctorLastName} onChange={(v) => updateField('doctorLastName', v)} />
-
-              <Input label="Patient First Name" value={form.patientFirstName} onChange={(v) => updateField('patientFirstName', v)} />
-              <Input label="Patient Last Name" value={form.patientLastName} onChange={(v) => updateField('patientLastName', v)} />
-
-              <Input label="Insurance" value={form.insurance} onChange={(v) => updateField('insurance', v)} />
-              <Input label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(v) => updateField('dateOfBirth', v)} />
-
-              <Input label="Assessment Score" type="number" value={form.score} onChange={(v) => updateField('score', v)} />
-              <Input label="Patient Phone" value={form.patientNumber} onChange={(v) => updateField('patientNumber', v)} />
-
-              <Input label="Email" type="email" value={form.email} onChange={(v) => updateField('email', v)} />
-
-              {/* New Fields */}
-              <Input label="Address" value={form.address} onChange={(v) => updateField('address', v)} />
-              <Input label="Facility Type" value={form.facilityType} onChange={(v) => updateField('facilityType', v)} />
-              <Input label="Radius (meters)" type="number" value={form.radius} onChange={(v) => updateField('radius', v)} />
+              <Input
+                label="Doctor First Name"
+                value={form.doctorFirstName}
+                onChange={(v) => updateField('doctorFirstName', v)}
+              />
+              <Input
+                label="Doctor Last Name"
+                value={form.doctorLastName}
+                onChange={(v) => updateField('doctorLastName', v)}
+              />
+              <Input
+                label="Patient First Name"
+                value={form.patientFirstName}
+                onChange={(v) => updateField('patientFirstName', v)}
+              />
+              <Input
+                label="Patient Last Name"
+                value={form.patientLastName}
+                onChange={(v) => updateField('patientLastName', v)}
+              />
+              <Input
+                label="Insurance"
+                value={form.insurance}
+                onChange={(v) => updateField('insurance', v)}
+              />
+              <Input
+                label="Date of Birth"
+                type="date"
+                value={form.dateOfBirth}
+                onChange={(v) => updateField('dateOfBirth', v)}
+              />
+              <Input
+                label="Assessment Score"
+                type="number"
+                value={form.score}
+                onChange={(v) => updateField('score', v)}
+              />
+              <Input
+                label="Patient Phone"
+                value={form.patientNumber}
+                onChange={(v) => updateField('patientNumber', v)}
+              />
+              <Input
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={(v) => updateField('email', v)}
+              />
+              <Input
+                label="Address"
+                value={form.address}
+                onChange={(v) => updateField('address', v)}
+              />
+              <Input
+                label="Facility Type"
+                value={form.facilityType}
+                onChange={(v) => updateField('facilityType', v)}
+              />
+              <Input
+                label="Radius (meters)"
+                type="number"
+                value={form.radius}
+                onChange={(v) => updateField('radius', v)}
+              />
             </div>
 
             {error && (
