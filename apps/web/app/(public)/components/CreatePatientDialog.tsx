@@ -1,119 +1,195 @@
 'use client';
 
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export type CreatePatientDialogProps = {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-  onCreate: (patient: {
-    name: string;
-    address: string;
-    insurance: string;
-    phone: string;
-  }) => void;
-};
+// --------------------------------------------------
+// CreatePatientDialog
+// --------------------------------------------------
+// Usage:
+// <CreatePatientDialog open={open} onClose={() => setOpen(false)} />
+// --------------------------------------------------
 
 export default function CreatePatientDialog({
-  isOpen,
-  setIsOpen,
-  onCreate,
-}: CreatePatientDialogProps) {
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [insurance, setInsurance] = useState('');
-  const [phone, setPhone] = useState('');
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    onCreate({ name, address, insurance, phone });
-    setName('');
-    setAddress('');
-    setInsurance('');
-    setPhone('');
-    setIsOpen(false);
-  };
+  const [form, setForm] = useState({
+    doctorFirstName: '',
+    doctorLastName: '',
+    patientFirstName: '',
+    patientLastName: '',
+    insurance: '',
+    dateOfBirth: '',
+    score: '',
+    patientNumber: '',
+    email: '',
+    address: '',
+    facilityType: '',
+    radius: '', // in meters
+  });
+
+  function updateField(key: string, value: string) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function submit() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1️⃣ Create patient
+      const res = await fetch('/api/patients/createPatients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          score: Number(form.score),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create patient');
+      }
+
+      const patientId = data.patientId;
+
+      // 2️⃣ Call hospital find API
+      const hospitalRes = await fetch('http://localhost:3000/api/hospital/findHospital', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId,
+          address: form.address,
+          query: form.facilityType || 'hospital', // default to "hospital"
+          radius: Number(form.radius) || 5000,
+        }),
+      });
+
+      const hospitalData = await hospitalRes.json();
+      console.log('Hospital Search Response:', hospitalData);
+
+      onClose();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={setIsOpen}>
-        {/* Overlay */}
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-50"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-50"
-          leaveTo="opacity-0"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          <div className="fixed inset-0 bg-black" />
-        </Transition.Child>
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={onClose}
+          />
 
-        {/* Modal panel */}
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-                <Dialog.Title className="text-xl font-bold mb-4">Create Patient</Dialog.Title>
+          {/* Dialog */}
+          <motion.div
+            className="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl"
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 40, opacity: 0 }}
+          >
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Add New Patient
+              </h2>
+              <p className="text-sm text-gray-500">
+                Enter patient and provider details
+              </p>
+            </div>
 
-                <div className="flex flex-col gap-3">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Insurance Type"
-                    value={insurance}
-                    onChange={(e) => setInsurance(e.target.value)}
-                    className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Phone Number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+            {/* Form */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Input label="Doctor First Name" value={form.doctorFirstName} onChange={(v) => updateField('doctorFirstName', v)} />
+              <Input label="Doctor Last Name" value={form.doctorLastName} onChange={(v) => updateField('doctorLastName', v)} />
 
-                <div className="mt-6 flex justify-end gap-2">
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSubmit}
-                    className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                  >
-                    Create
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
+              <Input label="Patient First Name" value={form.patientFirstName} onChange={(v) => updateField('patientFirstName', v)} />
+              <Input label="Patient Last Name" value={form.patientLastName} onChange={(v) => updateField('patientLastName', v)} />
+
+              <Input label="Insurance" value={form.insurance} onChange={(v) => updateField('insurance', v)} />
+              <Input label="Date of Birth" type="date" value={form.dateOfBirth} onChange={(v) => updateField('dateOfBirth', v)} />
+
+              <Input label="Assessment Score" type="number" value={form.score} onChange={(v) => updateField('score', v)} />
+              <Input label="Patient Phone" value={form.patientNumber} onChange={(v) => updateField('patientNumber', v)} />
+
+              <Input label="Email" type="email" value={form.email} onChange={(v) => updateField('email', v)} />
+
+              {/* New Fields */}
+              <Input label="Address" value={form.address} onChange={(v) => updateField('address', v)} />
+              <Input label="Facility Type" value={form.facilityType} onChange={(v) => updateField('facilityType', v)} />
+              <Input label="Radius (meters)" type="number" value={form.radius} onChange={(v) => updateField('radius', v)} />
+            </div>
+
+            {error && (
+              <div className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={onClose}
+                className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submit}
+                disabled={loading}
+                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? 'Creating…' : 'Create Patient'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
+  return (
+    <div className="flex flex-col">
+      <label className="mb-1 text-xs font-medium text-gray-600">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+    </div>
   );
 }
