@@ -70,11 +70,11 @@ Of course! See you then."
   function getStatusColor(status: string) {
     switch (status.trim().toLowerCase()) {
       case 'pending':
-        return 'bg-gray-400';
+        return 'bg-yellow-400';
       case 'rejected':
-        return 'bg-gray-400';
+        return 'bg-red-500';
       case 'accepted':
-        return 'bg-gray-400';
+        return 'bg-green-500';
       default:
         return 'bg-gray-400';
     }
