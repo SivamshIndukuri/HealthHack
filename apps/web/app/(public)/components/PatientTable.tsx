@@ -1,18 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import HospitalTable from './HospitalTable';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// ------------------------
-// Patient Info Dialog
-// ------------------------
+export type Patient = {
+  doctor_id: string;
+  doctor_first_name: string;
+  doctor_last_name: string;
+  patient_id: string;
+  patient_first_name: string;
+  patient_last_name: string;
+  insurance: string;
+  date_of_birth: string;
+  score: number | null;
+  patient_phone_number: string;
+  email: string;
+  patient_status: string;
+  created_at: string;
+};
+
 function PatientInfoDialog({
   patient,
   onClose,
 }: {
-  patient: any;
+  patient: Patient | null;
   onClose: () => void;
 }) {
   if (!patient) return null;
@@ -25,10 +38,7 @@ function PatientInfoDialog({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        <div
-          className="absolute inset-0 bg-black/40"
-          onClick={onClose}
-        />
+        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
         <motion.div
           className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl z-10"
@@ -65,8 +75,7 @@ function PatientInfoDialog({
               <span className="font-medium">Email:</span> {patient.email}
             </div>
             <div>
-              <span className="font-medium">Status:</span>{' '}
-              {patient.patient_status}
+              <span className="font-medium">Status:</span> {patient.patient_status}
             </div>
           </div>
 
@@ -85,48 +94,23 @@ function PatientInfoDialog({
 }
 
 // ------------------------
-// Types
-// ------------------------
-type Patient = {
-  doctor_id: string;
-  doctor_first_name: string;
-  doctor_last_name: string;
-  patient_id: string;
-  patient_first_name: string;
-  patient_last_name: string;
-  insurance: string;
-  date_of_birth: string;
-  score: number | null;
-  patient_phone_number: string;
-  email: string;
-  patient_status: string;
-  created_at: string;
-};
-
-// ------------------------
 // Patient Table Component
 // ------------------------
-export default function PatientTable() {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function PatientTable({
+  patients,
+  setPatients,
+  loading,
+}: {
+  patients: Patient[];
+  setPatients: React.Dispatch<React.SetStateAction<Patient[]>>;
+  loading: boolean;
+}) {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [showPatientInfo, setShowPatientInfo] = useState<Patient | null>(null);
 
-  useEffect(() => {
-    async function fetchPatients() {
-      try {
-        const res = await fetch('/api/patients/getPatients/');
-        const data = await res.json();
-        setPatients(data.patients || []);
-      } catch (err) {
-        console.error('Failed to load patients', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPatients();
-  }, []);
+  const selectedPatient = patients.find(
+    (p) => p.patient_id === selectedPatientId
+  );
 
   if (loading) {
     return <div className="text-sm text-gray-500">Loading patients…</div>;
@@ -134,7 +118,6 @@ export default function PatientTable() {
 
   return (
     <>
-      {/* ---------------- Layout Container ---------------- */}
       <div
         className={`flex gap-6 transition-all duration-300 ease-in-out ${
           selectedPatientId ? 'flex-row' : 'flex-col'
@@ -153,7 +136,7 @@ export default function PatientTable() {
                   <th className="px-4 py-3">Patient</th>
                   <th className="px-4 py-3">Phone</th>
                   <th className="px-4 py-3">Insurance</th>
-                  <th className="px-4 py-3">Score</th>
+                  <th className="px-4 py-3">EPDS Score</th>
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
@@ -209,7 +192,7 @@ export default function PatientTable() {
         </div>
 
         {/* ---------------- Hospital Table ---------------- */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {selectedPatientId && (
             <motion.div
               className="w-1/2"
@@ -220,7 +203,8 @@ export default function PatientTable() {
             >
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Hospitals
+                  Providers for {selectedPatient?.patient_first_name}{' '}
+                  {selectedPatient?.patient_last_name}
                 </h2>
                 <button
                   onClick={() => setSelectedPatientId(null)}
@@ -236,7 +220,6 @@ export default function PatientTable() {
         </AnimatePresence>
       </div>
 
-      {/* ---------------- Patient Info Dialog ---------------- */}
       {showPatientInfo && (
         <PatientInfoDialog
           patient={showPatientInfo}
