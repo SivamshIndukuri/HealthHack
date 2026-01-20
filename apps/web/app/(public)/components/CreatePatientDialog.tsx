@@ -171,7 +171,7 @@ export default function CreatePatientDialog({
                 onChange={(v) => updateField('facilityType', v)}
               />
               <Input
-                label="Radius (meters)"
+                label="Radius (miles)"
                 type="number"
                 value={form.radius}
                 onChange={(v) => updateField('radius', v)}
@@ -197,7 +197,7 @@ export default function CreatePatientDialog({
                 disabled={loading}
                 className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading ? 'Creating…' : 'Create Patient'}
+                {loading ? 'Creating…' : 'Create'}
               </button>
             </div>
           </motion.div>

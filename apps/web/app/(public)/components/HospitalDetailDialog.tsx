@@ -20,6 +20,7 @@ type Appointment = {
   status: string; // e.g., 'Completed', 'Pending', etc.
   appointmentDate: string; // ISO string
   appointmentTime: string; // e.g., "2:30 PM"
+  patientStatus: string;
 };
 
 export default function CombinedAppointmentDialog({
@@ -97,7 +98,7 @@ export default function CombinedAppointmentDialog({
                 <Info label="Provider Name" value={hospital.hospital_name} />
                 <Info label="Address" value={hospital.hospital_address} />
                 <Info label="Phone" value={hospital.hospital_phone_number} />
-                <Info label="Ranking" value={hospital.ranking.toString()} />
+                <Info label="Rating" value={hospital.ranking.toString()} />
                 <div className="flex items-center gap-2">
                   <span
                     className={`inline-block w-3.5 h-3.5 rounded-full ${getStatusColor(
@@ -123,8 +124,24 @@ export default function CombinedAppointmentDialog({
 
             {/* Right: Appointment */}
             <div className="flex-1 flex flex-col gap-4">
+              {/* Appointment Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <Info label="Patient" value={appointment.patientName} />
+                <Info label="Doctor" value={appointment.doctorName} />
+                <Info label="Location" value={appointment.location} />
+                <Info
+                  label="Date"
+                  value={new Date(appointment.appointmentDate).toLocaleDateString()}
+                />
+                <Info label="Time" value={appointment.appointmentTime} />
+                <Info label="Patient Status" value={appointment.patientStatus} />
+              </div>
+
               {/* Audio */}
               <div>
+                <div className="text-xs font-medium text-gray-500 mb-1">
+                  Recording
+                </div>
                 <audio
                   controls
                   src={appointment.audioUrl}
@@ -134,39 +151,15 @@ export default function CombinedAppointmentDialog({
 
               {/* Transcription */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
+                <div className="text-xs font-medium text-gray-500 mb-1">
                   Transcription
-                </h3>
+                </div>
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-900 max-h-48 overflow-y-auto">
                   {appointment.transcription}
                 </div>
               </div>
-
-              {/* Key Appointment Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <Info label="Patient" value={appointment.patientName} />
-                <Info label="Doctor" value={appointment.doctorName} />
-                <Info label="Location" value={appointment.location} />
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-block w-3.5 h-3.5 rounded-full ${getStatusColor(
-                      appointment.status
-                    )}`}
-                    title={normalizeStatusText(appointment.status)}
-                  />
-                  <span className="text-sm text-gray-900 font-medium">Status</span>
-                </div>
-              </div>
-
-              {/* Appointment Date/Time */}
-              <div className="mt-2 text-sm text-gray-700">
-                <div className="font-medium">Appointment</div>
-                <div>
-                  {new Date(appointment.appointmentDate).toLocaleDateString()} at{' '}
-                  {appointment.appointmentTime}
-                </div>
-              </div>
             </div>
+
           </div>
 
           {/* Actions */}

@@ -192,7 +192,7 @@ export default function PatientTable({
         </div>
 
         {/* ---------------- Hospital Table ---------------- */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {selectedPatientId && (
             <motion.div
               className="w-1/2"

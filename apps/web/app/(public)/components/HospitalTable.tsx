@@ -45,25 +45,36 @@ export default function HospitalTable({ patientId }: { patientId: string }) {
   // Mock appointment data (same as before)
   const mockAppointment = {
     audioUrl: '/mock-audio.mp3',
-    transcription:
-      'Hello, this is a test transcription of the appointment recording.',
-    patientName: 'Jane Doe',
+    transcription: "Uh, hi… thanks for picking up. I’m, um, just calling to help set up an appointment. Is this a good time?\n\
+Yeah… that’s fine.\n\
+Okay, great. So, uh, I just need to check a couple things real quick. Can you, um, tell me your date of birth and your insurance?\n\
+Uh, sure — it’s January 14th, 1994, and, ah, I have Blue Cross PPO.\n\
+Perfect, thanks! Um, we do accept that plan. The next available slot is, uh, Tuesday, January 23rd, at 2:30 in the afternoon. Would that, uh, work for you?\n\
+Yeah, that should be fine.\n\
+Great! So, um, it’ll be in person at our Main Street office. If you can, ah, try to arrive like 15 minutes early for check-in.\n\
+Yeah, okay, no problem.\n\
+Alright, um, you’re all set. I’ve scheduled it, and you should get a confirmation message with all the details soon. If anything comes up or you need to reschedule, all the info will be in there.\n\
+Perfect, thanks so much.\n\
+Of course! See you then."
+    ,
+    patientName: 'Roopa Patty',
     doctorName: 'Dr. John Smith',
-    location: "Saint Peter's Hospital, Room 203",
+    location: "A New Way Counseling and Psychotherapy LLC",
     status: 'Completed',
     appointmentDate: '2026-01-18',
     appointmentTime: '2:30 PM',
+    patientStatus: 'To Visit Provider'
   };
 
   // Helper to map call_status to Tailwind color
   function getStatusColor(status: string) {
     switch (status.trim().toLowerCase()) {
       case 'pending':
-        return 'bg-yellow-400';
+        return 'bg-gray-400';
       case 'rejected':
-        return 'bg-red-500';
+        return 'bg-gray-400';
       case 'accepted':
-        return 'bg-green-500';
+        return 'bg-gray-400';
       default:
         return 'bg-gray-400';
     }
@@ -83,7 +94,7 @@ export default function HospitalTable({ patientId }: { patientId: string }) {
             <tr>
               <th className="px-4 py-3">Provider</th>
               <th className="px-4 py-3">Phone</th>
-              <th className="px-4 py-3">Ranking</th>
+              <th className="px-4 py-3">Rating</th>
               <th className="px-4 py-3">Status</th>
             </tr>
           </thead>
